@@ -31,7 +31,12 @@ public class AuctionSniperDriver {
     }
 
     public void showsSniperStatus(String statusText) {
-        window.label(MainWindow.SNIPER_STATUS_NAME).requireText(statusText);
+        try {
+            Thread.sleep(300);
+            window.label(MainWindow.SNIPER_STATUS_NAME).requireText(statusText);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void dispose() {

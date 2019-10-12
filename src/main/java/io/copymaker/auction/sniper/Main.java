@@ -23,19 +23,34 @@ public class Main {
 
     private MainWindow mainWindow;
 
+    // ChatManager 문서에 채팅 객체 자체에 대한 참조를 유지해야 한다고 함. 가비지 컬렉션 대상에서 제외하기 위함
+    @SuppressWarnings("unused")
+    private Chat notToBeGCd;
+
     public Main() throws InvocationTargetException, InterruptedException {
         startUserInterface();
     }
 
     public static void main(String[] args) throws Exception {
         Main main = new Main();
-        XMPPConnection connection = connectTo(args[ARG_HOSTNAME], args[ARG_USERNAME], args[ARG_PASSWORD]);
-        Chat chat = connection.getChatManager().createChat(auctionId(args[ARG_ITEM_ID], connection), new MessageListener() {
+        main.joinAuction(connection(args[ARG_HOSTNAME], args[ARG_USERNAME], args[ARG_PASSWORD]), args[ARG_ITEM_ID]);
+    }
+
+    private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
+        final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection), new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainWindow.showStatus(MainWindow.STATUS_LOST);
+                    }
+                });
 
             }
         });
+
+        this.notToBeGCd = chat;
         chat.sendMessage(new Message());
     }
 
@@ -48,7 +63,7 @@ public class Main {
         });
     }
 
-    private static XMPPConnection connectTo(String hostname, String username, String password) throws XMPPException {
+    private static XMPPConnection connection(String hostname, String username, String password) throws XMPPException {
         XMPPConnection connection = new XMPPConnection(hostname);
         connection.connect();
         connection.login(username, password, AUCTION_RESOURCE);
