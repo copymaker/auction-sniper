@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    jcenter()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+dependencies {
+    implementation('org.igniterealtime.smack:smack:3.2.1')
+
+    testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+    testImplementation('org.assertj:assertj-core:3.13.2')
+    testImplementation('org.assertj:assertj-swing-junit:3.9.2')
+    testImplementation('org.mockito:mockito-junit-jupiter:3.1.0')
+}
+
+test {
+    useJUnitPlatform()
+}
