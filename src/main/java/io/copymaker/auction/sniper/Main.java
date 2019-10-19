@@ -1,18 +1,18 @@
 package io.copymaker.auction.sniper;
 
+import io.copymaker.auction.sniper.listener.AuctionEventListener;
+import io.copymaker.auction.sniper.translator.AuctionMessageTranslator;
 import io.copymaker.auction.sniper.ui.MainWindow;
 import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 
-public class Main {
+public class Main implements AuctionEventListener {
 
     private static final int ARG_HOSTNAME = 0;
     private static final int ARG_USERNAME = 1;
@@ -43,21 +43,21 @@ public class Main {
 
     private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
         disconnectWhenUICloses(connection);
-        final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection), new MessageListener() {
-            @Override
-            public void processMessage(Chat chat, Message message) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainWindow.showStatus(MainWindow.STATUS_LOST);
-                    }
-                });
+        final Chat chat = connection.getChatManager().createChat(
+                auctionId(itemId, connection),
+                new AuctionMessageTranslator(this));
+        chat.sendMessage(JOIN_COMMAND_FORMAT);
+        this.notToBeGCd = chat;
+    }
 
+    @Override
+    public void auctionClosed() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                mainWindow.showStatus(MainWindow.STATUS_LOST);
             }
         });
-
-        this.notToBeGCd = chat;
-        chat.sendMessage(JOIN_COMMAND_FORMAT);
     }
 
     private void startUserInterface() throws InvocationTargetException, InterruptedException {
