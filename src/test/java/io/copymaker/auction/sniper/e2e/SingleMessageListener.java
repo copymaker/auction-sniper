@@ -1,4 +1,4 @@
-package io.copymaker.auction.sniper;
+package io.copymaker.auction.sniper.e2e;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;

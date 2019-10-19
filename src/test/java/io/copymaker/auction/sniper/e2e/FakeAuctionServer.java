@@ -1,5 +1,6 @@
-package io.copymaker.auction.sniper;
+package io.copymaker.auction.sniper.e2e;
 
+import io.copymaker.auction.sniper.Main;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.XMPPConnection;

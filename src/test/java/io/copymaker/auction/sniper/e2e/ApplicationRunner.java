@@ -1,5 +1,6 @@
-package io.copymaker.auction.sniper;
+package io.copymaker.auction.sniper.e2e;
 
+import io.copymaker.auction.sniper.Main;
 import io.copymaker.auction.sniper.ui.MainWindow;
 
 public class ApplicationRunner {

@@ -1,10 +1,8 @@
-package io.copymaker.auction.sniper;
+package io.copymaker.auction.sniper.e2e;
 
 import org.jivesoftware.smack.XMPPException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 어떤 메서드가 이벤트를 발생시켜 테스트를 이끈다면 해당 메서드의 이름은 명령(command)
