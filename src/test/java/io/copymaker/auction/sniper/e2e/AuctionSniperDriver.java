@@ -4,6 +4,7 @@ import io.copymaker.auction.sniper.ui.MainWindow;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.core.Robot;
+import org.assertj.swing.data.TableCell;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 
@@ -33,7 +34,7 @@ public class AuctionSniperDriver {
     public void showsSniperStatus(String statusText) {
         try {
             Thread.sleep(300);
-            window.label(MainWindow.SNIPER_STATUS_NAME).requireText(statusText);
+            window.table().requireCellValue(TableCell.row(0).column(0), statusText);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
