@@ -23,7 +23,7 @@ public class Main implements SniperListener {
     public static final String ITEM_ID_AS_LOGIN = "auction-%s";
     public static final String AUCTION_ID_FORMAT = ITEM_ID_AS_LOGIN + "@%s/" + AUCTION_RESOURCE;
 
-    public static final String JOIN_COMMAND_FORMAT = "";
+    public static final String JOIN_COMMAND_FORMAT = "SOLVersion: 1.1; Command: JOIN;";
     public static final String BID_COMMAND_FORMAT = "SOLVersion: 1.1; Command: BID; Price: %d";
 
     private MainWindow mainWindow;
@@ -43,30 +43,37 @@ public class Main implements SniperListener {
 
     private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
         disconnectWhenUICloses(connection);
-        final Chat chat = connection.getChatManager().createChat(
-                auctionId(itemId, connection),
-                new AuctionMessageTranslator(new AuctionSniper(this)));
-        chat.sendMessage(JOIN_COMMAND_FORMAT);
+
+        final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection),null);
         this.notToBeGCd = chat;
+
+        Auction auction = new Auction() {
+            @Override
+            public void bid(int amount) {
+                try {
+                    chat.sendMessage(String.format(BID_COMMAND_FORMAT, amount));
+                } catch (XMPPException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        chat.addMessageListener(new AuctionMessageTranslator(new AuctionSniper(auction,this)));
+        chat.sendMessage(JOIN_COMMAND_FORMAT);
     }
 
     @Override
     public void sniperLost() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                mainWindow.showStatus(MainWindow.STATUS_LOST);
-            }
-        });
+        SwingUtilities.invokeLater(() -> mainWindow.showStatus(MainWindow.STATUS_LOST));
+    }
+
+    @Override
+    public void sniperBidding() {
+        SwingUtilities.invokeLater(() -> mainWindow.showStatus(MainWindow.STATUS_BIDDING));
     }
 
     private void startUserInterface() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                mainWindow = new MainWindow();
-            }
-        });
+        SwingUtilities.invokeAndWait(() -> mainWindow = new MainWindow());
     }
 
     private static XMPPConnection connection(String hostname, String username, String password) throws XMPPException {
