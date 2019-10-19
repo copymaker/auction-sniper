@@ -8,6 +8,8 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
 import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 
 public class Main {
@@ -20,6 +22,9 @@ public class Main {
     public static final String AUCTION_RESOURCE = "Auction";
     public static final String ITEM_ID_AS_LOGIN = "auction-%s";
     public static final String AUCTION_ID_FORMAT = ITEM_ID_AS_LOGIN + "@%s/" + AUCTION_RESOURCE;
+
+    public static final String JOIN_COMMAND_FORMAT = "";
+    public static final String BID_COMMAND_FORMAT = "SOLVersion: 1.1; Command: BID; Price: %d";
 
     private MainWindow mainWindow;
 
@@ -37,6 +42,7 @@ public class Main {
     }
 
     private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
+        disconnectWhenUICloses(connection);
         final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection), new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
@@ -51,7 +57,7 @@ public class Main {
         });
 
         this.notToBeGCd = chat;
-        chat.sendMessage(new Message());
+        chat.sendMessage(JOIN_COMMAND_FORMAT);
     }
 
     private void startUserInterface() throws InvocationTargetException, InterruptedException {
@@ -68,6 +74,15 @@ public class Main {
         connection.connect();
         connection.login(username, password, AUCTION_RESOURCE);
         return connection;
+    }
+
+    private void disconnectWhenUICloses(final XMPPConnection connection) {
+        mainWindow.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                connection.disconnect();
+            }
+        });
     }
 
     private static String auctionId(String itemId, XMPPConnection connection) {

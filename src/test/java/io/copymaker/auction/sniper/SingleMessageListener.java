@@ -21,4 +21,10 @@ public class SingleMessageListener implements MessageListener {
     public void receivesAMessage() throws InterruptedException {
         assertThat(messages.poll(5, TimeUnit.SECONDS)).as("Message").isNotNull();
     }
+
+    public void receivesAMessage(String receivedMessage) throws InterruptedException {
+        final Message message = messages.poll(5, TimeUnit.SECONDS);
+        assertThat(message).as("Message").isNotNull();
+        assertThat(message.getBody()).isEqualTo(receivedMessage);
+    }
 }
