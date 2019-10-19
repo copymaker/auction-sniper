@@ -60,6 +60,11 @@ public class Main implements AuctionEventListener {
         });
     }
 
+    @Override
+    public void currentPrice(int price, int increment) {
+
+    }
+
     private void startUserInterface() throws InvocationTargetException, InterruptedException {
         SwingUtilities.invokeAndWait(new Runnable() {
             @Override

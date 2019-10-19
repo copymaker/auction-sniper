@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -27,6 +28,16 @@ class AuctionMessageTranslatorTest {
         translator.processMessage(UNUSED_CHAT, message);
 
         verify(listener, times(1)).auctionClosed();
+    }
+
+    @Test
+    void notifiesBidDetailsWhenCurrentPriceMessageReceived() {
+        Message message = new Message();
+        message.setBody("SOLVersion: 1.1; Event: PRICE; CurrentPrice: 192; Increment: 7; Bidder: Someone else;");
+
+        translator.processMessage(UNUSED_CHAT, message);
+
+        verify(listener, times(1)).currentPrice(eq(192), eq(7));
     }
 
 }
