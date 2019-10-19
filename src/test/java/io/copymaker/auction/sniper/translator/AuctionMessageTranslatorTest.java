@@ -1,5 +1,6 @@
 package io.copymaker.auction.sniper.translator;
 
+import io.copymaker.auction.sniper.e2e.ApplicationRunner;
 import io.copymaker.auction.sniper.listener.AuctionEventListener;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.packet.Message;
@@ -18,7 +19,7 @@ class AuctionMessageTranslatorTest {
 
     private static final Chat UNUSED_CHAT = null;
     private final AuctionEventListener listener = Mockito.mock(AuctionEventListener.class);
-    private final AuctionMessageTranslator translator = new AuctionMessageTranslator(listener);
+    private final AuctionMessageTranslator translator = new AuctionMessageTranslator(ApplicationRunner.SNIPER_ID, listener);
 
     @Test
     void notifiesAuctionClosedWhenCloseMessageReceived() {
@@ -31,13 +32,25 @@ class AuctionMessageTranslatorTest {
     }
 
     @Test
-    void notifiesBidDetailsWhenCurrentPriceMessageReceived() {
+    void notifiesBidDetailsWhenCurrentPriceMessageReceivedFromOtherBidder() {
         Message message = new Message();
         message.setBody("SOLVersion: 1.1; Event: PRICE; CurrentPrice: 192; Increment: 7; Bidder: Someone else;");
 
         translator.processMessage(UNUSED_CHAT, message);
 
-        verify(listener, times(1)).currentPrice(eq(192), eq(7));
+        verify(listener, times(1))
+                .currentPrice(eq(192), eq(7), eq(AuctionEventListener.PriceSource.FROM_OTHER_BIDDER));
+    }
+
+    @Test
+    void notifiesBidDetailsWhenCurrentPriceMessageReceivedFromSniper() {
+        Message message = new Message();
+        message.setBody("SOLVersion: 1.1; Event: PRICE; CurrentPrice: 234; Increment: 5; Bidder: " + ApplicationRunner.SNIPER_ID + ";");
+
+        translator.processMessage(UNUSED_CHAT, message);
+
+        verify(listener, times(1))
+                .currentPrice(eq(234), eq(5), eq(AuctionEventListener.PriceSource.FROM_SNIPER));
     }
 
 }
