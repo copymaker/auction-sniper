@@ -1,6 +1,5 @@
 package io.copymaker.auction.sniper;
 
-import io.copymaker.auction.sniper.listener.SniperListener;
 import io.copymaker.auction.sniper.translator.AuctionMessageTranslator;
 import io.copymaker.auction.sniper.ui.MainWindow;
 import org.jivesoftware.smack.Chat;
@@ -12,7 +11,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 
-public class Main implements SniperListener {
+public class Main {
 
     private static final int ARG_HOSTNAME = 0;
     private static final int ARG_USERNAME = 1;
@@ -41,35 +40,16 @@ public class Main implements SniperListener {
         main.joinAuction(connection(args[ARG_HOSTNAME], args[ARG_USERNAME], args[ARG_PASSWORD]), args[ARG_ITEM_ID]);
     }
 
-    private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
+    private void joinAuction(XMPPConnection connection, String itemId) {
         disconnectWhenUICloses(connection);
 
         final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection),null);
         this.notToBeGCd = chat;
 
-        Auction auction = new Auction() {
-            @Override
-            public void bid(int amount) {
-                try {
-                    chat.sendMessage(String.format(BID_COMMAND_FORMAT, amount));
-                } catch (XMPPException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
+        Auction auction = new XMPPAuction(chat);
+        chat.addMessageListener(new AuctionMessageTranslator(new AuctionSniper(auction, new SniperStateDisplayer(mainWindow))));
 
-        chat.addMessageListener(new AuctionMessageTranslator(new AuctionSniper(auction,this)));
-        chat.sendMessage(JOIN_COMMAND_FORMAT);
-    }
-
-    @Override
-    public void sniperLost() {
-        SwingUtilities.invokeLater(() -> mainWindow.showStatus(MainWindow.STATUS_LOST));
-    }
-
-    @Override
-    public void sniperBidding() {
-        SwingUtilities.invokeLater(() -> mainWindow.showStatus(MainWindow.STATUS_BIDDING));
+        auction.join();
     }
 
     private void startUserInterface() throws InvocationTargetException, InterruptedException {
