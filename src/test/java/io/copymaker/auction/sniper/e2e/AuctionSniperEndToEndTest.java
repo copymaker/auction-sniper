@@ -32,7 +32,7 @@ class AuctionSniperEndToEndTest {
         application.startBiddingIn(auction);        // 2단계
         auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID); // 3단계
         auction.announceClosed();                   // 4단계
-        application.showsSniperHasLostAuction();    // 5단계
+        application.showsSniperHasLostAuction(0, 0);    // 5단계
     }
 
     @Test
@@ -48,7 +48,7 @@ class AuctionSniperEndToEndTest {
         auction.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID);
 
         auction.announceClosed();
-        application.showsSniperHasLostAuction();
+        application.showsSniperHasLostAuction(1000, 1098);
     }
 
     @Test

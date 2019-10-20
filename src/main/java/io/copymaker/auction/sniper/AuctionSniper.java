@@ -4,36 +4,40 @@ import io.copymaker.auction.sniper.listener.AuctionEventListener;
 import io.copymaker.auction.sniper.listener.SniperListener;
 
 public class AuctionSniper implements AuctionEventListener {
-    private String itemId;
-    private boolean isWinning = false;
 
     private final Auction auction;
     private final SniperListener sniperListener;
 
+    private SniperSnapShot sniperSnapShot;
+
     public AuctionSniper(String itemId, Auction auction, SniperListener sniperListener) {
-        this.itemId = itemId;
         this.auction = auction;
         this.sniperListener = sniperListener;
+        this.sniperSnapShot = SniperSnapShot.joining(itemId);
     }
 
     @Override
     public void auctionClosed() {
-        if (isWinning) {
-            sniperListener.sniperWon();
-        } else {
-            sniperListener.sniperLost();
-        }
+        sniperSnapShot = sniperSnapShot.closed();
+        notifyChange();
     }
 
     @Override
     public void currentPrice(int price, int increment, PriceSource priceSource) {
-        isWinning = priceSource == PriceSource.FROM_SNIPER;
-        if (isWinning) {
-            sniperListener.sniperWinning();
-        } else {
-            int bid = price + increment;
-            auction.bid(bid);
-            sniperListener.sniperBidding(new SniperState(itemId, price, bid));
+        switch (priceSource) {
+            case FROM_SNIPER:
+                sniperSnapShot = sniperSnapShot.winning(price);
+                break;
+            case FROM_OTHER_BIDDER:
+                int bid = price + increment;
+                auction.bid(bid);
+                sniperSnapShot = sniperSnapShot.bidding(price, bid);
+                break;
         }
+        notifyChange();
+    }
+
+    private void notifyChange() {
+        sniperListener.sniperStateChanged(sniperSnapShot);
     }
 }

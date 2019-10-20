@@ -2,6 +2,7 @@ package io.copymaker.auction.sniper;
 
 import io.copymaker.auction.sniper.translator.AuctionMessageTranslator;
 import io.copymaker.auction.sniper.ui.MainWindow;
+import io.copymaker.auction.sniper.ui.SnipersTableModel;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -25,6 +26,7 @@ public class Main {
     public static final String JOIN_COMMAND_FORMAT = "SOLVersion: 1.1; Command: JOIN;";
     public static final String BID_COMMAND_FORMAT = "SOLVersion: 1.1; Command: BID; Price: %d";
 
+    private final SnipersTableModel snipers = new SnipersTableModel();
     private MainWindow mainWindow;
 
     // ChatManager 문서에 채팅 객체 자체에 대한 참조를 유지해야 한다고 함. 가비지 컬렉션 대상에서 제외하기 위함
@@ -32,7 +34,7 @@ public class Main {
     private Chat notToBeGCd;
 
     public Main() throws InvocationTargetException, InterruptedException {
-        startUserInterface();
+        SwingUtilities.invokeAndWait(() -> mainWindow = new MainWindow(snipers));
     }
 
     public static void main(String[] args) throws Exception {
@@ -49,13 +51,9 @@ public class Main {
         Auction auction = new XMPPAuction(chat);
         chat.addMessageListener(new AuctionMessageTranslator(
                 connection.getUser(),
-                new AuctionSniper(itemId, auction, new SniperStateDisplayer(mainWindow))));
+                new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))));
 
         auction.join();
-    }
-
-    private void startUserInterface() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(() -> mainWindow = new MainWindow());
     }
 
     private static XMPPConnection connection(String hostname, String username, String password) throws XMPPException {

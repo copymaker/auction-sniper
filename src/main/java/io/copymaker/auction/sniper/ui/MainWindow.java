@@ -1,6 +1,7 @@
 package io.copymaker.auction.sniper.ui;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import java.awt.*;
 
 public class MainWindow extends JFrame {
@@ -9,18 +10,10 @@ public class MainWindow extends JFrame {
     public static final String MAIN_WINDOW_NAME = "Auction Sniper Main";
     public static final String SNIPERS_TABLE_NAME = "Sniper table";
 
-    public static final String STATUS_JOINING = "Joining";
-    public static final String STATUS_BIDDING = "Bidding";
-    public static final String STATUS_WINNING = "Winning";
-    public static final String STATUS_LOST = "Lost";
-    public static final String STATUS_WON = "Won";
-
-    private final SnipersTableModel snipers = new SnipersTableModel();
-
-    public MainWindow() {
+    public MainWindow(TableModel tableModel) {
         super(APPLICATION_TITLE);
         setName(MAIN_WINDOW_NAME);
-        fillContentPane(makeSnipersTable());
+        fillContentPane(makeSnipersTable(tableModel));
         pack();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
@@ -32,13 +25,9 @@ public class MainWindow extends JFrame {
         contentPane.add(new JScrollPane(snipersTable), BorderLayout.CENTER);
     }
 
-    private JTable makeSnipersTable() {
-        final JTable snipersTable = new JTable(snipers);
+    private JTable makeSnipersTable(TableModel tableModel) {
+        final JTable snipersTable = new JTable(tableModel);
         snipersTable.setName(SNIPERS_TABLE_NAME);
         return snipersTable;
-    }
-
-    public void showStatus(String statusText) {
-        snipers.setStatusText(statusText);
     }
 }

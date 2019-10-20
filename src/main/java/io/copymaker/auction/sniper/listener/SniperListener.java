@@ -1,15 +1,11 @@
 package io.copymaker.auction.sniper.listener;
 
-import io.copymaker.auction.sniper.SniperState;
+import io.copymaker.auction.sniper.SniperSnapShot;
 
 import java.util.EventListener;
 
 public interface SniperListener extends EventListener {
-    void sniperBidding(SniperState sniperState);
 
-    void sniperWinning();
+    void sniperStateChanged(SniperSnapShot sniperSnapShot);
 
-    void sniperLost();
-
-    void sniperWon();
 }

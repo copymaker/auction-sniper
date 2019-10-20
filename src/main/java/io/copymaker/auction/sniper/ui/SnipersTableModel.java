@@ -1,10 +1,16 @@
 package io.copymaker.auction.sniper.ui;
 
+import io.copymaker.auction.sniper.SniperSnapShot;
+import io.copymaker.auction.sniper.SniperState;
+import io.copymaker.auction.sniper.listener.SniperListener;
+
 import javax.swing.table.AbstractTableModel;
 
-public class SnipersTableModel extends AbstractTableModel {
+public class SnipersTableModel extends AbstractTableModel implements SniperListener {
 
-    private String statusText = MainWindow.STATUS_JOINING;
+    private static final String[] STATUS_TEXT = {"Joining", "Bidding", "Winning", "Lost", "Won"};
+
+    private SniperSnapShot sniperSnapShot = SniperSnapShot.joining("");
 
     @Override
     public int getRowCount() {
@@ -13,16 +19,26 @@ public class SnipersTableModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return 1;
+        return Column.values().length;
     }
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        return statusText;
+        return Column.at(columnIndex).valueIn(sniperSnapShot);
     }
 
-    public void setStatusText(String statusText) {
-        this.statusText = statusText;
+    @Override
+    public String getColumnName(int column) {
+        return Column.at(column).getName();
+    }
+
+    @Override
+    public void sniperStateChanged(SniperSnapShot sniperSnapShot) {
+        this.sniperSnapShot = sniperSnapShot;
         fireTableRowsUpdated(0, 0);
+    }
+
+    public static String textFor(SniperState sniperState) {
+        return STATUS_TEXT[sniperState.ordinal()];
     }
 }

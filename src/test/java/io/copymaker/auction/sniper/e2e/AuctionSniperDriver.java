@@ -7,6 +7,8 @@ import org.assertj.swing.core.Robot;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JTableFixture;
+import org.assertj.swing.fixture.JTableHeaderFixture;
 
 import javax.swing.*;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +31,14 @@ public class AuctionSniperDriver {
                 return frame.getName().equals(MainWindow.MAIN_WINDOW_NAME) && frame.isShowing();
             }
         };
+    }
+
+    public void hasTitle(String expectedTitle) {
+        window.requireTitle(expectedTitle);
+    }
+
+    public void hasColumnTitles() {
+
     }
 
     public void showsSniperStatus(String itemId, int lastPrice, int lastBid, String statusText) {

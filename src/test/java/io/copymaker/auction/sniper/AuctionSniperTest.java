@@ -4,6 +4,8 @@ import io.copymaker.auction.sniper.listener.AuctionEventListener;
 import io.copymaker.auction.sniper.listener.SniperListener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -21,58 +23,54 @@ class AuctionSniperTest {
     private final SniperListener sniperListener = Mockito.mock(SniperListener.class);
     private final AuctionSniper sniper = new AuctionSniper(ITEM_ID, auction, sniperListener);
 
-    private TestState testState = TestState.IDLE;
-
-    private enum TestState {
-        IDLE, WINNING, BIDDING
-    }
+    @Captor
+    private ArgumentCaptor<SniperSnapShot> snapShotArgumentCaptor;
 
     @Test
     void reportsLostWhenAuctionClosedImmediately() {
         sniper.auctionClosed();
 
-        verify(sniperListener, times(1)).sniperLost();
+        verify(sniperListener, times(1)).sniperStateChanged(snapShotArgumentCaptor.capture());
+        assertThat(snapShotArgumentCaptor.getValue().sniperState).isEqualTo(SniperState.LOST);
     }
 
     @Test
     void bidsHigherAndReportsBiddingWhenNewPriceArrives() {
         final int price = 1001;
         final int increment = 25;
-        final int bid = price + increment;
 
         sniper.currentPrice(price, increment, AuctionEventListener.PriceSource.FROM_OTHER_BIDDER);
 
         verify(auction, times(1)).bid(eq(price + increment));
-        verify(sniperListener, atLeast(1)).sniperBidding(any(SniperState.class));
+        verify(sniperListener, atLeast(1)).sniperStateChanged(snapShotArgumentCaptor.capture());
+        assertThat(snapShotArgumentCaptor.getValue().sniperState).isEqualTo(SniperState.BIDDING);
     }
 
     @Test
     void reportsIsWinningWhenCurrentPriceComesFromSniper() {
-        sniper.currentPrice(123, 45, AuctionEventListener.PriceSource.FROM_SNIPER);
+        sniper.currentPrice(123, 12, AuctionEventListener.PriceSource.FROM_OTHER_BIDDER);
+        sniper.currentPrice(135, 45, AuctionEventListener.PriceSource.FROM_SNIPER);
 
-        verify(sniperListener, atLeast(1)).sniperWinning();
+        verify(sniperListener, atLeastOnce())
+                .sniperStateChanged(new SniperSnapShot(ITEM_ID, 135, 135, SniperState.WINNING));
     }
 
     @Test
     void reportsLostIfAuctionClosesWhenBidding() {
-        doAnswer(invocation -> testState = TestState.BIDDING).when(sniperListener).sniperBidding(any(SniperState.class));
-
         sniper.currentPrice(123, 45, AuctionEventListener.PriceSource.FROM_OTHER_BIDDER);
         sniper.auctionClosed();
 
-        verify(sniperListener, atLeastOnce()).sniperLost();
-        assertThat(testState).isEqualTo(TestState.BIDDING);
+        verify(sniperListener, atLeastOnce()).sniperStateChanged(snapShotArgumentCaptor.capture());
+        assertThat(snapShotArgumentCaptor.getValue().sniperState).isEqualTo(SniperState.LOST);
     }
 
     @Test
     void reportsWonIfAuctionClosesWhenWinning() {
-        doAnswer(invocation -> testState = TestState.WINNING).when(sniperListener).sniperWinning();
-
         sniper.currentPrice(123, 45, AuctionEventListener.PriceSource.FROM_SNIPER);
         sniper.auctionClosed();
 
-        verify(sniperListener, atLeastOnce()).sniperWon();
-        assertThat(testState).isEqualTo(TestState.WINNING);
+        verify(sniperListener, atLeastOnce()).sniperStateChanged(snapShotArgumentCaptor.capture());
+        assertThat(snapShotArgumentCaptor.getValue().sniperState).isEqualTo(SniperState.WON);
     }
 
 }
