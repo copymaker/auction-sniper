@@ -31,10 +31,13 @@ public class AuctionSniperDriver {
         };
     }
 
-    public void showsSniperStatus(String statusText) {
+    public void showsSniperStatus(String itemId, int lastPrice, int lastBid, String statusText) {
         try {
             Thread.sleep(300);
-            window.table().requireCellValue(TableCell.row(0).column(0), statusText);
+            window.table().requireCellValue(TableCell.row(0).column(0), itemId);
+            window.table().requireCellValue(TableCell.row(0).column(1), String.valueOf(lastPrice));
+            window.table().requireCellValue(TableCell.row(0).column(2), String.valueOf(lastBid));
+            window.table().requireCellValue(TableCell.row(0).column(3), statusText);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
