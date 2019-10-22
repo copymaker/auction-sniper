@@ -11,6 +11,8 @@ import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -31,7 +33,7 @@ public class Main {
 
     // ChatManager 문서에 채팅 객체 자체에 대한 참조를 유지해야 한다고 함. 가비지 컬렉션 대상에서 제외하기 위함
     @SuppressWarnings("unused")
-    private Chat notToBeGCd;
+    private List<Chat> notToBeGCds = new ArrayList<>();
 
     public Main() throws InvocationTargetException, InterruptedException {
         SwingUtilities.invokeAndWait(() -> mainWindow = new MainWindow(snipers));
@@ -39,14 +41,19 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         Main main = new Main();
-        main.joinAuction(connection(args[ARG_HOSTNAME], args[ARG_USERNAME], args[ARG_PASSWORD]), args[ARG_ITEM_ID]);
+
+        XMPPConnection connection = connection(args[ARG_HOSTNAME], args[ARG_USERNAME], args[ARG_PASSWORD]);
+        main.disconnectWhenUICloses(connection);
+
+        for (int i = 3; i < args.length; i++) {
+            main.joinAuction(connection, args[i]);
+        }
     }
 
-    private void joinAuction(XMPPConnection connection, String itemId) {
-        disconnectWhenUICloses(connection);
-
+    private void joinAuction(XMPPConnection connection, String itemId) throws Exception {
+        safelyAddItemToModel(itemId);
         final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection),null);
-        this.notToBeGCd = chat;
+        this.notToBeGCds.add(chat);
 
         Auction auction = new XMPPAuction(chat);
         chat.addMessageListener(new AuctionMessageTranslator(
@@ -54,6 +61,10 @@ public class Main {
                 new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))));
 
         auction.join();
+    }
+
+    private void safelyAddItemToModel(final String itemId) throws Exception {
+        SwingUtilities.invokeAndWait(() -> snipers.addSniper(SniperSnapShot.joining(itemId)));
     }
 
     private static XMPPConnection connection(String hostname, String username, String password) throws XMPPException {

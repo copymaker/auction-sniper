@@ -1,14 +1,14 @@
 package io.copymaker.auction.sniper.e2e;
 
+import io.copymaker.auction.sniper.ui.Column;
 import io.copymaker.auction.sniper.ui.MainWindow;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.core.Robot;
-import org.assertj.swing.data.TableCell;
+import org.assertj.swing.data.TableCellInRowByValue;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JTableFixture;
-import org.assertj.swing.fixture.JTableHeaderFixture;
 
 import javax.swing.*;
 import java.util.concurrent.TimeUnit;
@@ -38,16 +38,23 @@ public class AuctionSniperDriver {
     }
 
     public void hasColumnTitles() {
-
+        for (Column column : Column.values()) {
+            window.table().requireColumnNamed(column.getName());
+        }
     }
 
     public void showsSniperStatus(String itemId, int lastPrice, int lastBid, String statusText) {
         try {
             Thread.sleep(300);
-            window.table().requireCellValue(TableCell.row(0).column(0), itemId);
-            window.table().requireCellValue(TableCell.row(0).column(1), String.valueOf(lastPrice));
-            window.table().requireCellValue(TableCell.row(0).column(2), String.valueOf(lastBid));
-            window.table().requireCellValue(TableCell.row(0).column(3), statusText);
+            JTableFixture tableFixture = window.table();
+
+            TableCellInRowByValue.TableCellBuilder tableCellBuilder =
+                    TableCellInRowByValue.rowWithValue(itemId, String.valueOf(lastPrice), String.valueOf(lastBid), statusText);
+
+            tableFixture.cell(tableCellBuilder.column(Column.ITEM_IDENTIFIER.ordinal())).requireValue(itemId);
+            tableFixture.cell(tableCellBuilder.column(Column.LAST_PRICE.ordinal())).requireValue(String.valueOf(lastPrice));
+            tableFixture.cell(tableCellBuilder.column(Column.LAST_BID.ordinal())).requireValue(String.valueOf(lastBid));
+            tableFixture.cell(tableCellBuilder.column(Column.SNIPER_STATE.ordinal())).requireValue(statusText);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
