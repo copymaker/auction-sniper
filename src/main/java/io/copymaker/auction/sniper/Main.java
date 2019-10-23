@@ -1,5 +1,6 @@
 package io.copymaker.auction.sniper;
 
+import io.copymaker.auction.sniper.listener.UserRequestListener;
 import io.copymaker.auction.sniper.translator.AuctionMessageTranslator;
 import io.copymaker.auction.sniper.ui.MainWindow;
 import io.copymaker.auction.sniper.ui.SnipersTableModel;
@@ -44,27 +45,25 @@ public class Main {
 
         XMPPConnection connection = connection(args[ARG_HOSTNAME], args[ARG_USERNAME], args[ARG_PASSWORD]);
         main.disconnectWhenUICloses(connection);
-
-        for (int i = 3; i < args.length; i++) {
-            main.joinAuction(connection, args[i]);
-        }
+        main.addUserRequestListenerFor(connection);
     }
 
-    private void joinAuction(XMPPConnection connection, String itemId) throws Exception {
-        safelyAddItemToModel(itemId);
-        final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection),null);
-        this.notToBeGCds.add(chat);
+    private void addUserRequestListenerFor(final XMPPConnection connection) {
+        mainWindow.addUserRequestListener(new UserRequestListener() {
+            @Override
+            public void joinAuction(String itemId) {
+                snipers.addSniper(SniperSnapShot.joining(itemId));
+                final Chat chat = connection.getChatManager().createChat(auctionId(itemId, connection),null);
+                notToBeGCds.add(chat);
 
-        Auction auction = new XMPPAuction(chat);
-        chat.addMessageListener(new AuctionMessageTranslator(
-                connection.getUser(),
-                new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))));
-
-        auction.join();
-    }
-
-    private void safelyAddItemToModel(final String itemId) throws Exception {
-        SwingUtilities.invokeAndWait(() -> snipers.addSniper(SniperSnapShot.joining(itemId)));
+                Auction auction = new XMPPAuction(chat);
+                chat.addMessageListener(
+                        new AuctionMessageTranslator(connection.getUser(),
+                                new AuctionSniper(itemId, auction,
+                                        new SwingThreadSniperListener(snipers))));
+                auction.join();
+            }
+        });
     }
 
     private static XMPPConnection connection(String hostname, String username, String password) throws XMPPException {

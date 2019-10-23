@@ -8,7 +8,9 @@ import org.assertj.swing.core.Robot;
 import org.assertj.swing.data.TableCellInRowByValue;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.fixture.JTableFixture;
+import org.assertj.swing.fixture.JTextComponentFixture;
 
 import javax.swing.*;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +33,14 @@ public class AuctionSniperDriver {
                 return frame.getName().equals(MainWindow.MAIN_WINDOW_NAME) && frame.isShowing();
             }
         };
+    }
+
+    public void startBiddingFor(String itemId) {
+        if (!itemIdField().text().isEmpty()) {
+            itemIdField().deleteText();
+        }
+        itemIdField().enterText(itemId);
+        bidButton().click();
     }
 
     public void hasTitle(String expectedTitle) {
@@ -62,5 +72,13 @@ public class AuctionSniperDriver {
 
     public void dispose() {
         window.cleanUp();
+    }
+
+    private JTextComponentFixture itemIdField() {
+        return window.textBox(MainWindow.NEW_ITEM_ID_NAME);
+    }
+
+    private JButtonFixture bidButton() {
+        return window.button(MainWindow.JOIN_BUTTON_NAME);
     }
 }
