@@ -28,7 +28,6 @@ class MainWindowTest {
     }
 
     @Test
-    @Timeout(3)
     void makesUserRequestWhenJoinButtonClicked() {
         mainWindow.addUserRequestListener(new UserRequestListener() {
             @Override
