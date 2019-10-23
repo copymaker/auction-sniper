@@ -45,7 +45,7 @@ public class ApplicationRunner {
 
     protected static String[] arguments(FakeAuctionServer... auctions) {
         String[] arguments = new String[auctions.length + 3];
-        arguments[0] = FakeAuctionServer.XMPP_HOSTNAME;
+        arguments[0] = Main.XMPP_HOSTNAME;
         arguments[1] = SNIPER_ID;
         arguments[2] = SNIPER_PASSWORD;
         for (int i = 0; i < auctions.length; i++) {

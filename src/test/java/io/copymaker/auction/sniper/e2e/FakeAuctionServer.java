@@ -1,6 +1,7 @@
 package io.copymaker.auction.sniper.e2e;
 
 import io.copymaker.auction.sniper.Main;
+import io.copymaker.auction.sniper.xmpp.XMPPAuctionHouse;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -9,8 +10,6 @@ import org.jivesoftware.smack.XMPPException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FakeAuctionServer {
-
-    public static final String XMPP_HOSTNAME = "localhost";
 
     public static final String AUCTION_RESOURCE = "Auction";
     public static final String ITEM_ID_AS_LOGIN = "auction-%s";
@@ -24,7 +23,7 @@ public class FakeAuctionServer {
 
     public FakeAuctionServer(String itemId) {
         this.itemId = itemId;
-        this.connection = new XMPPConnection(XMPP_HOSTNAME);
+        this.connection = new XMPPConnection(Main.XMPP_HOSTNAME);
     }
 
     public void startSellingItem() throws XMPPException {
@@ -45,11 +44,11 @@ public class FakeAuctionServer {
     }
 
     public void hasReceivedJoinRequestFrom(String sniperId) throws InterruptedException {
-        receivesAMessageMatching(sniperId, Main.JOIN_COMMAND_FORMAT);
+        receivesAMessageMatching(sniperId, XMPPAuctionHouse.JOIN_COMMAND_FORMAT);
     }
 
     public void hasReceivedBid(int bid, String sniperId) throws InterruptedException {
-        receivesAMessageMatching(sniperId, String.format(Main.BID_COMMAND_FORMAT, bid));
+        receivesAMessageMatching(sniperId, String.format(XMPPAuctionHouse.BID_COMMAND_FORMAT, bid));
     }
 
     private void receivesAMessageMatching(String sniperId, String receivedMessage) throws InterruptedException {

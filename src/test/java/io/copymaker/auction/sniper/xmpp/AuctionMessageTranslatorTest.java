@@ -1,13 +1,16 @@
-package io.copymaker.auction.sniper.translator;
+package io.copymaker.auction.sniper.xmpp;
 
 import io.copymaker.auction.sniper.e2e.ApplicationRunner;
 import io.copymaker.auction.sniper.listener.AuctionEventListener;
+import io.copymaker.auction.sniper.xmpp.AuctionMessageTranslator;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.packet.Message;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,7 +22,7 @@ class AuctionMessageTranslatorTest {
 
     private static final Chat UNUSED_CHAT = null;
     private final AuctionEventListener listener = Mockito.mock(AuctionEventListener.class);
-    private final AuctionMessageTranslator translator = new AuctionMessageTranslator(ApplicationRunner.SNIPER_ID, listener);
+    private final AuctionMessageTranslator translator = new AuctionMessageTranslator(ApplicationRunner.SNIPER_ID, Arrays.asList(listener));
 
     @Test
     void notifiesAuctionClosedWhenCloseMessageReceived() {

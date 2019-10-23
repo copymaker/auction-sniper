@@ -1,21 +1,20 @@
-package io.copymaker.auction.sniper.translator;
+package io.copymaker.auction.sniper.xmpp;
 
 import io.copymaker.auction.sniper.listener.AuctionEventListener;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class AuctionMessageTranslator implements MessageListener {
 
     private final String sniperId;
-    private final AuctionEventListener listener;
+    private final List<AuctionEventListener> listeners;
 
-    public AuctionMessageTranslator(String sniperId, AuctionEventListener listener) {
+    public AuctionMessageTranslator(String sniperId, List<AuctionEventListener> listeners) {
         this.sniperId = sniperId;
-        this.listener = listener;
+        this.listeners = listeners;
     }
 
     @Override
@@ -24,9 +23,10 @@ public class AuctionMessageTranslator implements MessageListener {
 
         String eventType = event.type();
         if ("CLOSE".equals(eventType)) {
-            listener.auctionClosed();
+            listeners.forEach(listener -> listener.auctionClosed());
         } else if ("PRICE".equals(eventType)) {
-            listener.currentPrice(event.currentPrice(), event.increment(), event.isFrom(sniperId));
+            listeners.forEach(listener ->
+                    listener.currentPrice(event.currentPrice(), event.increment(), event.isFrom(sniperId)));
         }
     }
 
