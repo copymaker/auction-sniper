@@ -1,20 +1,17 @@
 package io.copymaker.auctionsniper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AuctionSniper implements AuctionEventListener {
 
-    private final String itemId;
+    private final Item item;
     private final Auction auction;
     private SniperSnapshot sniperSnapshot;
 
     private final Announcer<SniperListener> sniperListeners = Announcer.to(SniperListener.class);
 
-    public AuctionSniper(String itemId, Auction auction) {
-        this.itemId = itemId;
+    public AuctionSniper(Item item, Auction auction) {
+        this.item = item;
         this.auction = auction;
-        this.sniperSnapshot = SniperSnapshot.joining(itemId);
+        this.sniperSnapshot = SniperSnapshot.joining(item.getId());
     }
 
     @Override
@@ -31,15 +28,19 @@ public class AuctionSniper implements AuctionEventListener {
                 break;
             case FROM_OTHER_BIDDER:
                 int bid = price + increment;
-                auction.bid(bid);
-                sniperSnapshot = sniperSnapshot.bidding(price, bid);
+                if (item.allowsBid(bid)) {
+                    auction.bid(bid);
+                    sniperSnapshot = sniperSnapshot.bidding(price, bid);
+                } else {
+                    sniperSnapshot = sniperSnapshot.losing(price);
+                }
                 break;
         }
         notifyChange();
     }
 
     public String getItemId() {
-        return itemId;
+        return item.getId();
     }
 
     public SniperSnapshot getSnapshot() {

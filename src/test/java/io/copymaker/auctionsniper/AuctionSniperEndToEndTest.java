@@ -10,13 +10,13 @@ import org.junit.jupiter.api.Test;
  */
 class AuctionSniperEndToEndTest {
 
-    private final FakeAuctionServer auction = new FakeAuctionServer("item-54321");
+    private final FakeAuctionServer auction1 = new FakeAuctionServer("item-54321");
     private final FakeAuctionServer auction2 = new FakeAuctionServer("item-65432");
     private final ApplicationRunner application = new ApplicationRunner();
 
     @AfterEach
     void tearDown() {
-        auction.stop();
+        auction1.stop();
         auction2.stop();
         application.stop();
     }
@@ -30,73 +30,95 @@ class AuctionSniperEndToEndTest {
      */
     @Test
     void sniperJoinsAuctionUntilAuctionCloses() throws XMPPException, InterruptedException {
-        auction.startSellingItem();                 // 1단계
-        application.startBiddingIn(auction);        // 2단계
-        auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID); // 3단계
-        auction.announceClosed();                   // 4단계
-        application.showsSniperHasLostAuction(auction,0, 0);    // 5단계
+        auction1.startSellingItem();                 // 1단계
+        application.startBiddingIn(auction1);        // 2단계
+        auction1.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID); // 3단계
+        auction1.announceClosed();                   // 4단계
+        application.showsSniperHasLostAuction(auction1,0, 0);    // 5단계
     }
 
     @Test
     void sniperMakesAHigherBidButLoses() throws XMPPException, InterruptedException {
-        auction.startSellingItem();
+        auction1.startSellingItem();
 
-        application.startBiddingIn(auction);
-        auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
+        application.startBiddingIn(auction1);
+        auction1.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
 
-        auction.reportPrice(1000, 98, "other bidder");
-        application.hasShownSniperIsBidding(auction,1000, 1098);
+        auction1.reportPrice(1000, 98, "other bidder");
+        application.hasShownSniperIsBidding(auction1,1000, 1098);
 
-        auction.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID);
+        auction1.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID);
 
-        auction.announceClosed();
-        application.showsSniperHasLostAuction(auction,1000, 1098);
+        auction1.announceClosed();
+        application.showsSniperHasLostAuction(auction1,1000, 1098);
     }
 
     @Test
     void sniperWinsAnAuctionByBiddingHigher() throws XMPPException, InterruptedException {
-        auction.startSellingItem();
+        auction1.startSellingItem();
 
-        application.startBiddingIn(auction);
-        auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
+        application.startBiddingIn(auction1);
+        auction1.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
 
-        auction.reportPrice(1000, 98, "other bidder");
-        application.hasShownSniperIsBidding(auction,1000, 1098);    // 최종 가격과 입찰
+        auction1.reportPrice(1000, 98, "other bidder");
+        application.hasShownSniperIsBidding(auction1,1000, 1098);    // 최종 가격과 입찰
 
-        auction.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID);
+        auction1.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID);
 
-        auction.reportPrice(1098, 97, ApplicationRunner.SNIPER_XMPP_ID);
-        application.hasShownSniperIsWinning(auction, 1098);  // 낙찰
+        auction1.reportPrice(1098, 97, ApplicationRunner.SNIPER_XMPP_ID);
+        application.hasShownSniperIsWinning(auction1, 1098);  // 낙찰
 
-        auction.announceClosed();
-        application.showsSniperHasWonAuction(auction, 1098); // 최종 가격
+        auction1.announceClosed();
+        application.showsSniperHasWonAuction(auction1, 1098); // 최종 가격
     }
 
     @Test
     void sniperBidsForMultipleItems() throws XMPPException, InterruptedException {
-        auction.startSellingItem();
+        auction1.startSellingItem();
         auction2.startSellingItem();
 
-        application.startBiddingIn(auction, auction2);
-        auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
+        application.startBiddingIn(auction1, auction2);
+        auction1.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
         auction2.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
 
-        auction.reportPrice(1000, 86, "other bidder");
-        auction.hasReceivedBid(1086, ApplicationRunner.SNIPER_XMPP_ID);
+        auction1.reportPrice(1000, 86, "other bidder");
+        auction1.hasReceivedBid(1086, ApplicationRunner.SNIPER_XMPP_ID);
 
         auction2.reportPrice(500, 21, "other bidder");
         auction2.hasReceivedBid(521, ApplicationRunner.SNIPER_XMPP_ID);
 
-        auction.reportPrice(1086, 97, ApplicationRunner.SNIPER_XMPP_ID);
+        auction1.reportPrice(1086, 97, ApplicationRunner.SNIPER_XMPP_ID);
         auction2.reportPrice(521, 22, ApplicationRunner.SNIPER_XMPP_ID);
 
-        application.hasShownSniperIsWinning(auction, 1086);
+        application.hasShownSniperIsWinning(auction1, 1086);
         application.hasShownSniperIsWinning(auction2, 521);
 
-        auction.announceClosed();
+        auction1.announceClosed();
         auction2.announceClosed();
 
-        application.showsSniperHasWonAuction(auction, 1086);
+        application.showsSniperHasWonAuction(auction1, 1086);
         application.showsSniperHasWonAuction(auction2, 521);
+    }
+
+    @Test
+    void sniperLosesAnAuctionWhenThePriceIsTooHigh() throws XMPPException, InterruptedException {
+        auction1.startSellingItem();
+
+        application.startBiddingWithStopPrice(auction1, 1100);
+        auction1.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID);
+
+        auction1.reportPrice(1000, 98, "other bidder");
+        application.hasShownSniperIsBidding(auction1, 1000, 1098);
+
+        auction1.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID);
+
+        auction1.reportPrice(1197, 10, "third party");
+        application.hasShownSniperIsLosing(auction1, 1197, 1098);
+
+        auction1.reportPrice(1207, 10, "fourth party");
+        application.hasShownSniperIsLosing(auction1, 1207, 1098);
+
+        auction1.announceClosed();
+        application.showsSniperHasLostAuction(auction1, 1207, 1098);
     }
 }

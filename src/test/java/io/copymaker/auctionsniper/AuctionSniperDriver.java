@@ -1,6 +1,5 @@
 package io.copymaker.auctionsniper;
 
-import io.copymaker.auctionsniper.Column;
 import io.copymaker.auctionsniper.ui.MainWindow;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.GenericTypeMatcher;
@@ -35,11 +34,18 @@ public class AuctionSniperDriver {
         };
     }
 
-    public void startBiddingFor(String itemId) {
-        if (!itemIdField().text().isEmpty()) {
-            itemIdField().deleteText();
+    public void startBiddingFor(String itemId, int stopPrice) {
+        JTextComponentFixture itemIdField = textField(MainWindow.NEW_ITEM_ID_NAME);
+        JTextComponentFixture itemStopPriceField = textField(MainWindow.NEW_ITEM_STOP_PRICE_NAME);
+
+        if (!itemIdField.text().isEmpty()) {
+            itemIdField.deleteText();
         }
-        itemIdField().enterText(itemId);
+        if (!itemStopPriceField.text().isEmpty()) {
+            itemStopPriceField.deleteText();
+        }
+        itemIdField.enterText(itemId);
+        itemStopPriceField.enterText(String.valueOf(stopPrice));
         bidButton().click();
     }
 
@@ -74,8 +80,8 @@ public class AuctionSniperDriver {
         window.cleanUp();
     }
 
-    private JTextComponentFixture itemIdField() {
-        return window.textBox(MainWindow.NEW_ITEM_ID_NAME);
+    private JTextComponentFixture textField(String fieldName) {
+        return window.textBox(fieldName);
     }
 
     private JButtonFixture bidButton() {

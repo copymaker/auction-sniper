@@ -19,9 +19,15 @@ import static org.mockito.Mockito.inOrder;
 class SniperLauncherTest {
 
     private final String itemId = "item 123";
-    @Mock private Auction auction;
-    @Mock private AuctionHouse auctionHouse;
-    @Mock private SniperCollector sniperCollector;
+
+    @Mock
+    private Auction auction;
+
+    @Mock
+    private AuctionHouse auctionHouse;
+
+    @Mock
+    private SniperCollector sniperCollector;
 
     private SniperLauncher launcher;
 
@@ -37,7 +43,7 @@ class SniperLauncherTest {
     void addsNewSniperToCollectorAndThenJoinsAuction() {
         given(auctionHouse.auctionFor(itemId)).willReturn(auction);
 
-        launcher.joinAuction(itemId);
+        launcher.joinAuction(new Item(itemId, Integer.MAX_VALUE));
 
         InOrder inOrder = inOrder(auction, sniperCollector);
 

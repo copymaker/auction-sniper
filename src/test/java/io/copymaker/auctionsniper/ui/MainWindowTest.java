@@ -1,5 +1,6 @@
 package io.copymaker.auctionsniper.ui;
 
+import io.copymaker.auctionsniper.Item;
 import io.copymaker.auctionsniper.SniperPortfolio;
 import io.copymaker.auctionsniper.AuctionSniperDriver;
 import io.copymaker.auctionsniper.UserRequestListener;
@@ -29,14 +30,16 @@ class MainWindowTest {
 
     @Test
     void makesUserRequestWhenJoinButtonClicked() {
+        Item anItem = new Item("an item-id", 789);
+
         mainWindow.addUserRequestListener(new UserRequestListener() {
             @Override
-            public void joinAuction(String itemId) {
-                assertThat(itemId).isEqualTo("an item-id");
+            public void joinAuction(Item item) {
+                assertThat(item).isEqualTo(anItem);
             }
         });
 
-        driver.startBiddingFor("an item-id");
+        driver.startBiddingFor("an item-id", 789);
     }
 
 }

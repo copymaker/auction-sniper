@@ -1,9 +1,5 @@
 package io.copymaker.auctionsniper;
 
-import io.copymaker.auctionsniper.AuctionSniper;
-import io.copymaker.auctionsniper.Column;
-import io.copymaker.auctionsniper.SniperSnapshot;
-import io.copymaker.auctionsniper.SnipersTableModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,25 +20,20 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class SnipersTableModelTest {
 
-    private final String ITEM_ID = "item-54321";
-    private final String ITEM_ID2 = "item-65432";
+    private AuctionSniper auctionSniper1 = new AuctionSniper(new Item("item-54321", Integer.MAX_VALUE), null);
+    private AuctionSniper auctionSniper2 = new AuctionSniper(new Item("item-65432", Integer.MAX_VALUE), null);
 
     private TableModelListener listener;
     private SnipersTableModel model;
-    private AuctionSniper auctionSniper;
-    private AuctionSniper auctionSniper2;
 
     @Captor
-    private ArgumentCaptor<TableModelEvent> argumentTableModelEvent;
+    private ArgumentCaptor<TableModelEvent> tableModelEventCaptor;
 
     @BeforeEach
     void setUp() {
         listener = Mockito.mock(TableModelListener.class);
         model = new SnipersTableModel();
         model.addTableModelListener(listener);
-
-        auctionSniper = new AuctionSniper(ITEM_ID, null);
-        auctionSniper2 = new AuctionSniper(ITEM_ID2, null);
     }
 
     @Test
@@ -52,10 +43,10 @@ class SnipersTableModelTest {
 
     @Test
     void setsSniperValuesInColumns() {
-        SniperSnapshot joining = SniperSnapshot.joining(ITEM_ID);
+        SniperSnapshot joining = SniperSnapshot.joining(auctionSniper1.getItemId());
         SniperSnapshot bidding = joining.bidding(555, 666);
 
-        model.sniperAdded(auctionSniper);
+        model.sniperAdded(auctionSniper1);
         model.sniperStateChanged(bidding);
 
         verify(listener, atLeastOnce()).tableChanged(any(TableModelEvent.class));
@@ -71,23 +62,23 @@ class SnipersTableModelTest {
 
     @Test
     void notifiesListenersWhenAddingASniper() {
-        SniperSnapshot joining = SniperSnapshot.joining(ITEM_ID);
+        SniperSnapshot joining = SniperSnapshot.joining(auctionSniper1.getItemId());
         assertThat(model.getRowCount()).isEqualTo(0);
 
-        model.sniperAdded(auctionSniper);
+        model.sniperAdded(auctionSniper1);
 
-        verify(listener, atLeastOnce()).tableChanged(argumentTableModelEvent.capture());
-        assertThat(argumentTableModelEvent.getValue().getType()).isEqualTo(TableModelEvent.INSERT);
+        verify(listener, atLeastOnce()).tableChanged(tableModelEventCaptor.capture());
+        assertThat(tableModelEventCaptor.getValue().getType()).isEqualTo(TableModelEvent.INSERT);
         assertThat(model.getRowCount()).isEqualTo(1);
         assertRowMatchesSnapShot(0, joining);
     }
 
     @Test
     void holdsSnipersInAdditionOrder() {
-        model.sniperAdded(auctionSniper);
+        model.sniperAdded(auctionSniper1);
         model.sniperAdded(auctionSniper2);
 
-        assertThat(model.getValueAt(0, Column.ITEM_IDENTIFIER.ordinal())).isEqualTo(auctionSniper.getItemId());
+        assertThat(model.getValueAt(0, Column.ITEM_IDENTIFIER.ordinal())).isEqualTo(auctionSniper1.getItemId());
         assertThat(model.getValueAt(1, Column.ITEM_IDENTIFIER.ordinal())).isEqualTo(auctionSniper2.getItemId());
     }
 
